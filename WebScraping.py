@@ -11,9 +11,10 @@ import time
 #from: https://stackoverflow.com/questions/37247336/selenium-use-of-firefox-profile
 profile = FirefoxProfile()
 profile.set_preference("browser.helperApps.neverAsk.saveToDisk", 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+profile.set_preference("browser.download.dir", "/Users/llccf/OneDrive/Dokumente/Hiwi_Jobs_Master/QuantEcon/Felix/Social Security Spain/src_data")
 #set up options to create a headless browser
 options = Options() 
-options.headless = False
+options.headless = True
 
 #start selenium webdriver
 driver = webdriver.Firefox(firefox_profile = profile, options = options)
@@ -45,7 +46,7 @@ for i in range(3,10):
 
 #this loop: late
 driver.get(url_late)
-for i in range(3,10):
+for i in range(2,7):
     year = str(i)
     year_link = 'article' + '[' + year + ']'
     for j in range(1,13):
