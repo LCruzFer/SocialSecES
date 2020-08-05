@@ -3,7 +3,8 @@ import pandas as pd
 import os 
 
 #exchange below to local path of project folder
-wd_lc = "/Users/llccf/OneDrive/Dokumente/Hiwi_Jobs_Master/QuantEcon/Felix/Social Security Spain/"
+wd = "YOURPATH"
+os.chdir(wd) 
 
 #functions 
 def get_date(string): 
@@ -31,6 +32,8 @@ def get_muni_code(df_muni):
 
 #CREATE DATASET
 #read in data to initialize columns 
+#code below that is turned to comment must be run once to save a csv 
+#including all data, afterwards can be turned back to comment 
 """
 data_init = pd.read_excel("src_data/" + os.listdir("src_data")[0], header = 1)
 #get columns
@@ -56,6 +59,7 @@ for file in file_list:
 #write total df to csv such that processing all files is not necessary 
 data_total.to_csv("out_data/all_data.csv")
 """
+
 data_total = pd.read_csv("out_data/all_data.csv")
 #exchange GENERAL "<5" is substituted with 4 (for now, ask Laura what to do about it)
 data_total["GENERAL"][data_total["GENERAL"] == "<5"] = np.nan
