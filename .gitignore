@@ -1,3 +1,4 @@
 .DS_Store
 src_data/
 geckodriver.log
+out_data/
