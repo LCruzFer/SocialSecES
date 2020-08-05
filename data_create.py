@@ -18,28 +18,20 @@ def get_date(string):
     year = int(string[-4:])
     return(year, month)
 
-def calc_missings(info_missing, data): 
+def get_muni_code(df_muni): 
     """
-    Info_missing is a row of a df that contains the info on the NACIONAL value that is missing.
-    data is the souce of the total data which is used to calculate the sum for nacional.
-    """ 
-    month = info_missing["month"]
-    year = info_missing["year"]
-    missing = data[["GENERAL", "year", "month"]].groupby(["year", "month"]).sum().reset_index()
-    data[(data["GENERAL"] == "NACIONAL") & (data["year"] == year) & (data["month"] == month)] = missing[(missing["year"] == year) & (missing["month"] == month)] 
-    data = data["GENERAL"]
-    return(data)
-
-def get_nacional(df):
-    nacional = df[df["PROVINCIA"] == "NACIONAL"]
-    nacional = nacional[["PROVINCIA", "GENERAL", "year", "month"]]
-    missings = nacional["GENERAL"].isnull() 
-    missings = nacional[missings]
-    data = missings.apply(calc_missings)
-    return(data)
+    df_muni is df element which contains names of municipio and code
+    """
+    code = []
+    df_muni = df_muni[df_muni.isnull() == False]
+    df_muni = df_muni[df_muni != "SIN DISTRIBUCIÓN (*)"]
+    for x in df_muni.tolist():
+        code.append(int(x.split()[0]))
+    return(code)
 
 #CREATE DATASET
 #read in data to initialize columns 
+"""
 data_init = pd.read_excel("src_data/" + os.listdir("src_data")[0], header = 1)
 #get columns
 columns = list(data_init.columns)
@@ -57,13 +49,38 @@ for file in file_list:
     year, month = get_date(file)
     data["year"] = year
     data["month"] = month 
+    if "Reg. General(1)" in list(data.columns):
+        data = data.rename(columns = {"Reg. General(1)": "GENERAL"})
     data_total = data_total.append(data, ignore_index = True)
     print(year, month)
+#write total df to csv such that processing all files is not necessary 
 data_total.to_csv("out_data/all_data.csv")
+"""
+data_total = pd.read_csv("out_data/all_data.csv")
 #exchange GENERAL "<5" is substituted with 4 (for now, ask Laura what to do about it)
-#data_total["GENERAL"][data_total["GENERAL"].apply(isinstance, args = [str])] = 4
-truth = data_total["GENERAL"][data_total["PROVINCIA"] == "NACIONAL"].isnull() == True
-truth = truth[truth == True]
-truth_index = list(truth.index)
-missings = data_total.loc[truth_index, ["GENERAL", "year", "month"]]
-data_total.loc[truth_index, "GENERAL"] = missings.apply(calc_missings, args = [data_total])
+data_total["GENERAL"][data_total["GENERAL"] == "<5"] = np.nan
+data_total["GENERAL"] = data_total["GENERAL"].astype(float)
+
+
+#CREATE PANEL 
+#create dataset for municipios of interest (moi)
+#read in municipios 
+muni = pd.read_stata("src_data/samplemunis_pollution.dta")
+data_reduc = data_total[["PROVINCIA", "MUNICIPIO", "GENERAL", "year", "month"]]
+#drop obs where Municipio is missing
+data_reduc = data_reduc[data_reduc["MUNICIPIO"].isnull() == False]
+data_reduc = data_reduc[data_reduc["MUNICIPIO"] != "SIN DISTRIBUCIÓN (*)"]
+data_reduc = data_reduc[data_reduc["MUNICIPIO"] != "PROVINCIAL"]
+data_reduc["MUNI_CODE"] = get_muni_code(data_reduc["MUNICIPIO"])
+#get municipios of interest using list provided by Felix
+data_moi = data_reduc.merge(muni, left_on = "MUNI_CODE", right_on = "municipality", how = "inner")
+#keep Municipio code as identifier
+data_moi = data_moi.drop(["municipality", "MUNICIPIO"], axis = 1)
+#average by municipilaity and year
+averages = data_moi.groupby(["MUNI_CODE", "year"]).mean().reset_index().drop("month", axis = 1)
+averages.to_csv("out_data/averages_muni.csv")
+#create dataset for NACIONAL
+data_nacional = data_total[data_total["PROVINCIA"] == "NACIONAL"]
+data_nacional = data_nacional[["PROVINCIA", "GENERAL", "year", "month"]]
+averages_nacional = data_nacional.groupby(["year"]).mean().reset_index().drop("month", axis = 1)
+averages_nacional.to_csv("out_data/averages_nacional.csv")
