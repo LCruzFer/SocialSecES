@@ -2,14 +2,16 @@ import numpy as np
 import pandas as pd 
 import os 
 
+
 """
 this file creates two CSVs -> see README
 average is constructed for column "GENERAL"
 if interested in other values, replace "GENERAL" with column name of interest 
 exchange below to local path of project folder
 """
-wd = "YOURPATH"
+wd = "Path to yoour project folder"
 os.chdir(wd) 
+
 
 #functions 
 def get_date(string): 
@@ -23,6 +25,7 @@ def get_date(string):
         month = int(month)
     year = int(string[-4:])
     return(year, month)
+
 
 def get_muni_code(df_muni): 
     """
@@ -40,7 +43,11 @@ def get_muni_code(df_muni):
 #code below that is turned to comment must be run once to save a csv 
 #including all data, afterwards can be turned back to comment 
 """
-data_init = pd.read_excel("src_data/" + os.listdir("src_data")[0], header = 1)
+
+#CREATE DATASET
+#read in data to initialize columns 
+
+data_init = pd.reader_excel("src_data/" + os.listdir("src_data")[0], header = 1)
 #get columns
 columns = list(data_init.columns)
 #append a year and month column
@@ -108,3 +115,4 @@ data_nacional = data_total[data_total["PROVINCIA"] == "NACIONAL"]
 data_nacional = data_nacional[["PROVINCIA", "GENERAL", "year", "month"]]
 averages_nacional = data_nacional.groupby(["year"]).mean().reset_index().drop("month", axis = 1)
 averages_nacional.to_csv("out_data/averages_nacional.csv")
+
