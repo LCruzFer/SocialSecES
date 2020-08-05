@@ -2,7 +2,12 @@ import numpy as np
 import pandas as pd 
 import os 
 
-#exchange below to local path of project folder
+"""
+this file creates two CSVs -> see README
+average is constructed for column "GENERAL"
+if interested in other values, replace "GENERAL" with column name of interest 
+exchange below to local path of project folder
+"""
 wd = "YOURPATH"
 os.chdir(wd) 
 
@@ -67,22 +72,37 @@ data_total["GENERAL"] = data_total["GENERAL"].astype(float)
 
 
 #CREATE PANEL 
-#create dataset for municipios of interest (moi)
-#read in municipios 
-muni = pd.read_stata("src_data/samplemunis_pollution.dta")
+#create dataset for municipios of interest (data_moi) 
+# or all municipios
+
+
+#only keep columns of interest (interested in "GENERAL")
 data_reduc = data_total[["PROVINCIA", "MUNICIPIO", "GENERAL", "year", "month"]]
 #drop obs where Municipio is missing
 data_reduc = data_reduc[data_reduc["MUNICIPIO"].isnull() == False]
+#drop where no municipio available
 data_reduc = data_reduc[data_reduc["MUNICIPIO"] != "SIN DISTRIBUCIÓN (*)"]
+#drop provincial total level 
 data_reduc = data_reduc[data_reduc["MUNICIPIO"] != "PROVINCIAL"]
+
 data_reduc["MUNI_CODE"] = get_muni_code(data_reduc["MUNICIPIO"])
-#get municipios of interest using list provided by Felix
+
+"""
+UNCOMMENT BELOW ONLY WHEN FILE TO FILTER MUNICIPIOS EXISTS
+#get municipios of interest using list from muni 
+#read in municipios
+#file below is a list of pre-defined municipios of interest 
+#if non available, then ignore 
+muni = pd.read_stata("src_data/samplemunis_pollution.dta")
 data_moi = data_reduc.merge(muni, left_on = "MUNI_CODE", right_on = "municipality", how = "inner")
 #keep Municipio code as identifier
 data_moi = data_moi.drop(["municipality", "MUNICIPIO"], axis = 1)
+"""
+
 #average by municipilaity and year
 averages = data_moi.groupby(["MUNI_CODE", "year"]).mean().reset_index().drop("month", axis = 1)
 averages.to_csv("out_data/averages_muni.csv")
+
 #create dataset for NACIONAL
 data_nacional = data_total[data_total["PROVINCIA"] == "NACIONAL"]
 data_nacional = data_nacional[["PROVINCIA", "GENERAL", "year", "month"]]
