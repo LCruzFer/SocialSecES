@@ -6,3 +6,7 @@
  - see file for more info 
 
 ### Processing 
+-data_create.py creates two dataframes 
+    1. yearly averages of "GENERAL" for the whole nation (nacional) 
+    2. yealry averages of "GENERAL" on municipio level 
+  
